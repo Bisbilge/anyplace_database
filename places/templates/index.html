@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ SITE_NAME }} | Açık Kaynak Mekan Rehberi</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    
+    <style>
+        :root {
+            /* Capcanlı, yüksek enerjili düz renkler */
+            --primary: #FF4757;    /* Canlı Kırmızı/Pembe */
+            --secondary: #1E90FF;  /* Parlak Mavi */
+            --success: #2ED573;    /* Fosforlu Yeşil */
+            --warning: #FFA502;    /* Enerjik Turuncu */
+            --dark: #2F3542;       /* Koyu Lacivert/Gri (Siyah yerine) */
+            --bg-light: #F1F2F6;
+        }
+
+
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-light); color: var(--dark); }
+        #map { height: 100vh; width: 100%; z-index: 1; }
+        
+        .leaflet-popup-content-wrapper { 
+            border-radius: 16px; 
+            padding: 0; 
+            overflow: hidden; 
+            border: 3px solid var(--dark);
+            box-shadow: 6px 6px 0px rgba(47, 53, 66, 0.2);
+        }
+        .leaflet-popup-content { margin: 0 !important; width: 260px !important; }
+        .leaflet-popup-tip { border-top: 3px solid var(--dark); border-left: 3px solid var(--dark); }
+
+        .card { padding: 0; }
+        
+        .card-header { 
+            background-color: var(--warning); 
+            padding: 16px; 
+            border-bottom: 3px solid var(--dark);
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+        }
+        .card-title { margin: 0; font-size: 19px; font-weight: 900; color: var(--dark); line-height: 1.2; flex: 1; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Kategori etiketi için jenerik badge tasarımı */
+        .badge-category { 
+            font-size: 12px; 
+            font-weight: 900; 
+            padding: 6px 10px; 
+            border-radius: 8px; 
+            border: 2px solid var(--dark); 
+            background: white; 
+            color: var(--dark);
+            white-space: nowrap; 
+            box-shadow: 2px 2px 0px var(--dark); 
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-body { padding: 16px; background-color: white; }
+        
+        .desc-text { font-size: 14px; color: var(--dark); line-height: 1.6; font-weight: 500; background: #FFFDF2; padding: 10px; border-left: 4px solid var(--warning); margin-bottom: 8px; }
+        .no-desc { font-size: 13px; color: #747D8C; font-style: italic; text-align: center; padding: 10px 0; }
+
+        .popup-report-btn {
+            display: block;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 14px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-top: 3px solid var(--dark);
+            transition: background 0.2s ease;
+        }
+        .popup-report-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        #report-btn {
+            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; background-color: var(--primary); color: white;
+            padding: 16px 36px; border-radius: 14px; text-decoration: none;
+            font-size: 18px; font-weight: 900; letter-spacing: 1px;
+            border: 3px solid var(--dark);
+            box-shadow: 6px 6px 0px var(--dark); 
+            transition: all 0.15s ease-in-out;
+            display: flex; align-items: center; gap: 10px;
+            white-space: nowrap; text-transform: uppercase;
+        }
+        #report-btn:hover { 
+            transform: translateX(-50%) translateY(4px); 
+            box-shadow: 2px 2px 0px var(--dark); 
+            background-color: #ff3344;
+        }
+
+        .custom-cluster { background-color: rgba(46, 213, 115, 0.3); border-radius: 50%; border: 2px dashed var(--dark); }
+        .custom-cluster div { 
+            background-color: var(--success); color: var(--dark); 
+            width: 36px; height: 36px; margin-left: 2px; margin-top: 2px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-weight: 900; font-size: 16px; border: 2px solid var(--dark);
+        }
+
+        @media (max-width: 600px) {
+            #report-btn { width: 80%; bottom: 25px; padding: 14px 20px; font-size: 16px; }
+            .leaflet-popup-content { width: 250px !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<a id="report-btn" href="/add-place/">
+    <span style="font-size: 22px;">📍</span> Yeni Mekan Ekle
+</a>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script>
+    function escapeHTML(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+        });
+    }
+
+    var map = L.map('map', { zoomControl: false }).setView([41.0082, 28.9784], 13);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup({
+        maxClusterRadius: 45,
+        disableClusteringAtZoom: 17,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        iconCreateFunction: function(cluster) {
+            return L.divIcon({ 
+                html: '<div><span>' + cluster.getChildCount() + '</span></div>', 
+                className: 'custom-cluster', 
+                iconSize: L.point(44, 44) 
+            });
+        }
+    });
+
+    // API rotası güncellendi
+    fetch('/api/places/')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(place => {
+                const safeName = escapeHTML(place.name);
+                const safeDesc = escapeHTML(place.desc || '');
+                const safeCategoryName = escapeHTML(place.category_name);
+                const safeCategoryIcon = place.category_icon ? escapeHTML(place.category_icon) : '📌';
+
+                // Kategori etiketi oluşturuldu
+                const categoryBadge = `<span class="badge-category">${safeCategoryIcon} ${safeCategoryName}</span>`;
+
+                const popupContent = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">${safeName}</h3>
+                            ${categoryBadge}
+                        </div>
+                        <div class="card-body">
+                            ${safeDesc ? `<div class="desc-text">${safeDesc}</div>` : '<div class="no-desc">Açıklama bulunmuyor.</div>'}
+                        </div>
+                        <a href="/report-issue/?id=${place.id}" class="popup-report-btn">⚠️ Hata Bildir</a>
+                    </div>
+                `;
+
+                var marker = L.marker([place.lat, place.lng]).bindPopup(popupContent, {
+                    autoPanPadding: [50, 50]
+                });
+                markers.addLayer(marker);
+            });
+            map.addLayer(markers);
+        })
+        .catch(err => console.error("Veri hatası:", err));
+
+    map.locate({setView: true, maxZoom: 15});
+    map.on('locationfound', function(e) {
+        L.circle(e.latlng, e.accuracy / 2, {
+            color: '#FF4757', fillColor: '#FF4757', fillOpacity: 0.2, weight: 2
+        }).addTo(map);
+        
+        L.circleMarker(e.latlng, {
+            radius: 10, color: '#2F3542', fillColor: '#1E90FF', fillOpacity: 1, weight: 3
+        }).addTo(map).bindPopup("<div style='padding:8px; font-weight:900; font-size: 15px;'>📍 BURADASIN!</div>");
+    });
+</script>
+
+</body>
+</html>

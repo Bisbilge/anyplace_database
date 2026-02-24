@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yeni Mekan Ekle | {{ SITE_NAME }}</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        :root {
+            --primary: #FF4757;
+            --secondary: #1E90FF;
+            --success: #2ED573;
+            --warning: #FFA502;
+            --dark: #2F3542;
+            --bg-light: #F1F2F6;
+        }
+
+        body { 
+            margin: 0; padding: 20px; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-light); 
+            color: var(--dark); 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            width: 100%; max-width: 550px;
+            border-radius: 16px;
+            border: 4px solid var(--dark);
+            box-shadow: 10px 10px 0px var(--dark);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 25px;
+            border-bottom: 4px solid var(--dark);
+            text-align: center;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+
+        .form-content { padding: 30px; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block; font-weight: 900; margin-bottom: 10px;
+            font-size: 15px; color: var(--dark); text-transform: uppercase;
+        }
+
+        /* Form Girdileri */
+        input[type="text"], input[type="url"], input[type="number"], textarea, select {
+            width: 100%; padding: 14px; 
+            border: 3px solid var(--dark); 
+            border-radius: 10px; 
+            font-size: 1rem; 
+            box-sizing: border-box; 
+            background: white;
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        input:focus, textarea:focus, select:focus { 
+            outline: none; 
+            border-color: var(--primary);
+            box-shadow: 4px 4px 0px var(--primary);
+        }
+
+        .help-text { font-size: 0.85rem; color: #747D8C; margin-top: 8px; font-weight: 600; }
+
+        /* Kategori Seçimi İçin Özel Vurgu */
+        .category-section {
+            background: #FFFDF2;
+            padding: 20px;
+            border: 3px solid var(--dark);
+            border-radius: 10px;
+            box-shadow: 4px 4px 0px var(--warning);
+            margin-bottom: 25px;
+        }
+
+        .captcha-container {
+            margin: 25px 0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .btn-submit {
+            width: 100%; background-color: var(--success); color: var(--dark);
+            padding: 18px; border-radius: 14px; border: 4px solid var(--dark);
+            font-size: 18px; font-weight: 900; text-transform: uppercase;
+            box-shadow: 6px 6px 0px var(--dark); cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-submit:hover {
+            transform: translateY(4px) translateX(4px);
+            box-shadow: 0px 0px 0px var(--dark);
+            background-color: #26de71;
+        }
+
+        .error-list { color: var(--primary); font-weight: 800; list-style: none; padding: 0; margin-top: 10px; text-align: center; }
+
+        .back-link {
+            display: block; text-align: center; margin-top: 25px;
+            color: var(--secondary); font-weight: 900; text-decoration: none;
+            font-size: 15px; text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 {{ SITE_NAME|upper }} - YENİ MEKAN EKLE</h1>
+        </div>
+        
+        <div class="form-content">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="display:none">
+                    <input type="text" name="website_url" tabindex="-1" autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label>Mekan Adı</label>
+                    {{ form.name }}
+                    <p class="help-text">Örn: Kadıköy Sahaflar Çarşısı, Merkez Parkı...</p>
+                </div>
+
+                <div class="category-section">
+                    <label>Kategori Seçimi</label>
+                    {{ form.category }}
+                    <p class="help-text">Bu mekanın türünü listeden seçin.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Google Maps Linki</label>
+                    {{ form.maps_url }}
+                    <p class="help-text">Konumu "Paylaş" diyerek aldığınız linki yapıştırın.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Ek Bilgiler / Açıklama</label>
+                    {{ form.description }}
+                    <p class="help-text">Mekan hakkında bilinmesi gereken detaylar, nasıl gidilir vb.</p>
+                </div>
+
+                <div class="captcha-container">
+                    {{ form.captcha }}
+                    {% if form.captcha.errors %}
+                        <ul class="error-list">
+                            {% for error in form.captcha.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-submit">BİLDİRİMİ GÖNDER</button>
+            </form>
+
+            <a href="/" class="back-link">← Haritaya Geri Dön</a>
+        </div>
+    </div>
+</body>
+</html>
