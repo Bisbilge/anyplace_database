@@ -291,10 +291,34 @@ class SetupWizard(tk.Tk):
     # ── ADIM 3: RECAPTCHA ──
     def _step_recaptcha(self):
         f = self.form_frame
-        domain = self.data.get("base_domain", "<repo>.vercel.app")
-        self._make_info(f, f"reCAPTCHA kayıt sayfasına şu domaini ekle: {domain}")
+        domain     = self.data.get("base_domain", "<repo>.vercel.app")
+        www_domain = f"www.{domain}"
+
+        self._make_info(f, "Google reCAPTCHA kayıt sayfasında her iki domaini de eklemen gerekiyor:")
+
+        # Domain kutuları — kopyalanabilir
+        for d in [domain, www_domain]:
+            row = tk.Frame(f, bg=CARD, padx=12, pady=6,
+                           highlightthickness=1, highlightbackground=BORDER)
+            row.pack(fill="x", pady=3)
+            tk.Label(row, text="🔗", bg=CARD, fg=ACCENT2,
+                     font=("Courier", 11)).pack(side="left", padx=(0, 8))
+            tk.Label(row, text=d, bg=CARD, fg=TEXT,
+                     font=("Courier", 11, "bold")).pack(side="left", fill="x", expand=True)
+
+            def make_copy(val):
+                def _copy():
+                    self.clipboard_clear()
+                    self.clipboard_append(val)
+                return _copy
+            tk.Button(row, text="📋 Kopyala", command=make_copy(d),
+                      bg=PANEL, fg=ACCENT2, font=("Courier", 9),
+                      relief="flat", cursor="hand2",
+                      activebackground=BORDER).pack(side="right")
+
         self._make_link_btn(f, "reCAPTCHA Yönetim Paneli",
                             "https://www.google.com/recaptcha/admin/create", "🛡️")
+        self._make_info(f, "Panelde 'reCAPTCHA v2 — Checkbox' seçmeyi unutma.")
 
         self.var_rc_pub = tk.StringVar(value=self.data.get("recaptcha_public", ""))
         self.var_rc_prv = tk.StringVar(value=self.data.get("recaptcha_private", ""))
@@ -587,7 +611,7 @@ class SetupWizard(tk.Tk):
 
 # ─────────────────────────── GİRİŞ NOKTASI ──────────────────────────
 def check_venv():
-    """Venv yoksa oluştur ve içinde yeniden başlat."""
+    """Venv yoksa oluştur, requirements.txt'i kur, sonra venv içinde yeniden başlat."""
     if not os.path.exists("venv"):
         print("📦 Sanal ortam (venv) oluşturuluyor...")
         subprocess.run([sys.executable, "-m", "venv", "venv"], check=True)
@@ -596,9 +620,23 @@ def check_venv():
                (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
 
     if not in_venv:
-        python_exe = os.path.join("venv", "bin", "python")
-        if not os.path.exists(python_exe):
-            python_exe = os.path.join("venv", "Scripts", "python.exe")  # Windows
+        # Platform'a göre venv yolları
+        if os.name == "nt":
+            python_exe = os.path.join("venv", "Scripts", "python.exe")
+            pip_exe    = os.path.join("venv", "Scripts", "pip.exe")
+        else:
+            python_exe = os.path.join("venv", "bin", "python")
+            pip_exe    = os.path.join("venv", "bin", "pip")
+
+        # requirements.txt varsa venv içinde kur (Django dahil her şey burada yüklenir)
+        if os.path.exists("requirements.txt"):
+            print("📦 Gerekli kütüphaneler kuruluyor (requirements.txt)...")
+            result = subprocess.run([pip_exe, "install", "-r", "requirements.txt"])
+            if result.returncode != 0:
+                print("⚠️  Bazı paketler kurulamadı, devam ediliyor...")
+        else:
+            print("⚠️  requirements.txt bulunamadı, atlanıyor.")
+
         print("🔄 Sanal ortam içinde yeniden başlatılıyor...")
         os.execv(python_exe, [python_exe] + sys.argv)
 
