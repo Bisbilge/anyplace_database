@@ -10,7 +10,7 @@
 Tek bir komutla kurulum sihirbazını başlatın:
 
 ```bash
-git clone https://github.com/Bisbilge/anyplace_database.git && cd anyplace_database && python setup.py
+git clone https://github.com/Bisbilge/anyplace_database.git && cd anyplace_database && python setup_wizard.py
 ```
 
 Komut şunları otomatik olarak yapar:
