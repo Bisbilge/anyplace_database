@@ -361,10 +361,19 @@ class SetupWizard(tk.Tk):
         self.log_box.see("end")
         self.log_box.config(state="disabled")
 
+    def _venv_python(self):
+        """Venv içindeki python ve pip yollarını döndür."""
+        if os.name == "nt":
+            return (os.path.join("venv", "Scripts", "python.exe"),
+                    os.path.join("venv", "Scripts", "pip.exe"))
+        return (os.path.join("venv", "bin", "python"),
+                os.path.join("venv", "bin", "pip"))
+
     def _run_configure(self):
         try:
             d = self.data
             pf = d["project_folder"]
+            python_exe, pip_exe = self._venv_python()
 
             # vercel.json
             self._log("📝 vercel.json oluşturuluyor...")
@@ -380,7 +389,7 @@ class SetupWizard(tk.Tk):
             self._log("🔑 .env dosyası oluşturuluyor...")
             secret_key = secrets.token_urlsafe(50)
             d["secret_key"] = secret_key
-            env = (
+            env_content = (
                 f'DJANGO_SECRET_KEY="{secret_key}"\n'
                 f'DATABASE_URL="{d["db_url"]}"\n'
                 f'DEBUG=True\n'
@@ -389,27 +398,27 @@ class SetupWizard(tk.Tk):
                 f'RECAPTCHA_PRIVATE_KEY="{d["recaptcha_private"]}"\n'
             )
             with open(".env", "w") as f:
-                f.write(env)
+                f.write(env_content)
             self._log("✅ .env hazır", SUCCESS)
 
-            # pip install
+            # pip install — venv pip'i kullan
             self._log("📦 Kütüphaneler kuruluyor (requirements.txt)...")
             result = subprocess.run(
-                "pip install -r requirements.txt",
-                shell=True, capture_output=False,
-                text=True
+                [pip_exe, "install", "-r", "requirements.txt"],
+                capture_output=True, text=True
             )
             if result.returncode != 0:
-                self._log("⚠️ pip install sırasında uyarı oluştu, devam ediliyor.", WARNING)
+                self._log(f"⚠️ pip install uyarısı:\n{result.stderr[:200]}", WARNING)
             else:
                 self._log("✅ Kütüphaneler kuruldu", SUCCESS)
 
-            # migrate
-            os.environ["DATABASE_URL"] = d["db_url"]
+            # migrate — venv python'unu kullan
+            run_env = os.environ.copy()
+            run_env["DATABASE_URL"] = d["db_url"]
             self._log("🐘 Neon veritabanı tabloları oluşturuluyor (migrate)...")
             result = subprocess.run(
-                "python manage.py migrate",
-                shell=True, text=True, capture_output=True
+                [python_exe, "manage.py", "migrate"],
+                capture_output=True, text=True, env=run_env
             )
             if result.returncode != 0:
                 self._log(f"❌ Migrate hatası:\n{result.stderr}", ERROR)
@@ -473,6 +482,7 @@ class SetupWizard(tk.Tk):
         self.lbl_su_status.config(text="⏳ Hesap oluşturuluyor...", fg=WARNING)
         self.update()
 
+        python_exe, _ = self._venv_python()
         env = os.environ.copy()
         env["DJANGO_SUPERUSER_USERNAME"] = username
         env["DJANGO_SUPERUSER_EMAIL"]    = email
@@ -480,8 +490,8 @@ class SetupWizard(tk.Tk):
         env["DATABASE_URL"]              = self.data.get("db_url", "")
 
         result = subprocess.run(
-            "python manage.py createsuperuser --no-input",
-            shell=True, capture_output=True, text=True, env=env
+            [python_exe, "manage.py", "createsuperuser", "--no-input"],
+            capture_output=True, text=True, env=env
         )
 
         if result.returncode != 0:
