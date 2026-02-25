@@ -393,7 +393,7 @@ class SetupWizard(tk.Tk):
                 f'DJANGO_SECRET_KEY="{secret_key}"\n'
                 f'DATABASE_URL="{d["db_url"]}"\n'
                 f'DEBUG=True\n'
-                f'ALLOWED_HOSTS="localhost,127.0.0.1,{d["base_domain"]},.vercel.app"\n'
+                f'ALLOWED_HOSTS="localhost,127.0.0.1,.vercel.app"\n'
                 f'RECAPTCHA_PUBLIC_KEY="{d["recaptcha_public"]}"\n'
                 f'RECAPTCHA_PRIVATE_KEY="{d["recaptcha_private"]}"\n'
             )
@@ -415,6 +415,8 @@ class SetupWizard(tk.Tk):
             # migrate — venv python'unu kullan
             run_env = os.environ.copy()
             run_env["DATABASE_URL"] = d["db_url"]
+            run_env["DJANGO_SETTINGS_MODULE"] = f"{pf}.settings"
+            run_env["PYTHONPATH"] = os.getcwd()
             self._log("🐘 Neon veritabanı tabloları oluşturuluyor (migrate)...")
             result = subprocess.run(
                 [python_exe, "manage.py", "migrate"],
@@ -428,6 +430,9 @@ class SetupWizard(tk.Tk):
                 ))
                 self.after(0, lambda: self.btn_next.config(state="normal", text="Tekrar Dene →"))
                 return
+            # migrate çıktısını logla
+            if result.stdout:
+                self._log(result.stdout.strip(), SUCCESS)
             self._log("✅ Tablolar oluşturuldu", SUCCESS)
             self._log("\n✅ Yapılandırma tamamlandı! Devam edebilirsin.", SUCCESS)
             self.after(0, lambda: self.btn_next.config(state="normal", text="Devam →"))
@@ -580,34 +585,47 @@ class SetupWizard(tk.Tk):
         box.pack(fill="x")
 
         keys = [
-            ("DATABASE_URL",       d.get("db_url", "")),
-            ("DJANGO_SECRET_KEY",  d.get("secret_key", "")),
+            ("DATABASE_URL",          d.get("db_url", "")),
+            ("DJANGO_SECRET_KEY",     d.get("secret_key", "")),
             ("RECAPTCHA_PUBLIC_KEY",  d.get("recaptcha_public", "")),
             ("RECAPTCHA_PRIVATE_KEY", d.get("recaptcha_private", "")),
-            ("DEBUG",              "False"),
-            ("ALLOWED_HOSTS",      f"*.vercel.app,{d.get('base_domain','')}"),
+            ("DEBUG",                 "False"),
+            ("ALLOWED_HOSTS",         "localhost,127.0.0.1,.vercel.app"),
         ]
 
         for k, v in keys:
             row = tk.Frame(box, bg=CARD)
             row.pack(fill="x", pady=3)
-            tk.Label(row, text=f"{k}:", fg=ACCENT2, bg=CARD,
-                     font=("Courier", 10, "bold"), width=26, anchor="w").pack(side="left")
-            val_var = tk.StringVar(value=v)
-            entry = tk.Entry(row, textvariable=val_var, font=("Courier", 10),
-                             bg=PANEL, fg=TEXT, relief="flat",
-                             readonlybackground=PANEL, state="readonly")
-            entry.pack(side="left", fill="x", expand=True, ipady=4, padx=(6, 0))
+
+            # Key adı — kopyalanabilir
+            key_var = tk.StringVar(value=k)
+            key_entry = tk.Entry(row, textvariable=key_var, font=("Courier", 10, "bold"),
+                                 bg=PANEL, fg=ACCENT2, relief="flat", width=26,
+                                 readonlybackground=PANEL, state="readonly")
+            key_entry.pack(side="left", ipady=4, padx=(0, 4))
 
             def make_copy(val):
                 def _copy():
                     self.clipboard_clear()
                     self.clipboard_append(val)
                 return _copy
-            tk.Button(row, text="📋", command=make_copy(v),
-                      bg=PANEL, fg=ACCENT, font=("Courier", 10),
+
+            tk.Button(row, text="📋", command=make_copy(k),
+                      bg=PANEL, fg=SUBTEXT, font=("Courier", 9),
                       relief="flat", cursor="hand2",
-                      activebackground=BORDER).pack(side="left", padx=4)
+                      activebackground=BORDER).pack(side="left", padx=(0, 8))
+
+            # Value — kopyalanabilir
+            val_var = tk.StringVar(value=v)
+            val_entry = tk.Entry(row, textvariable=val_var, font=("Courier", 10),
+                                 bg=CARD, fg=TEXT, relief="flat",
+                                 readonlybackground=CARD, state="readonly")
+            val_entry.pack(side="left", fill="x", expand=True, ipady=4)
+
+            tk.Button(row, text="📋", command=make_copy(v),
+                      bg=PANEL, fg=ACCENT, font=("Courier", 9),
+                      relief="flat", cursor="hand2",
+                      activebackground=BORDER).pack(side="left", padx=(4, 0))
 
         tk.Label(f, text=f"Admin paneli: https://{d.get('base_domain','')}/admin",
                  fg=ACCENT2, bg=BG, font=("Courier", 11, "bold")).pack(anchor="w", pady=(8,0))
