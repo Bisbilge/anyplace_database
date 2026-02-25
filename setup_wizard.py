@@ -418,6 +418,12 @@ class SetupWizard(tk.Tk):
             run_env["DJANGO_SETTINGS_MODULE"] = f"{pf}.settings"
             run_env["PYTHONPATH"] = os.getcwd()
 
+            # static klasörü yoksa oluştur (W004 uyarısını önler)
+            static_dir = os.path.join(os.getcwd(), "static")
+            if not os.path.exists(static_dir):
+                os.makedirs(static_dir)
+                self._log("📁 static/ klasörü oluşturuldu", SUCCESS)
+
             # makemigrations — places app için migration dosyaları oluştur
             self._log("📋 Migration dosyaları oluşturuluyor (makemigrations)...")
             result = subprocess.run(
@@ -510,7 +516,7 @@ class SetupWizard(tk.Tk):
         env["DATABASE_URL"]              = self.data.get("db_url", "")
 
         result = subprocess.run(
-            [python_exe, "manage.py", "createsuperuser", "--no-input"],
+            [python_exe, "manage.py", "createsuperuser", "--no-input", "--skip-checks"],
             capture_output=True, text=True, env=env
         )
 
