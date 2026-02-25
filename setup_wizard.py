@@ -412,6 +412,12 @@ class SetupWizard(tk.Tk):
             else:
                 self._log("✅ Kütüphaneler kuruldu", SUCCESS)
 
+            # run_env — Django komutları için ortak environment
+            run_env = os.environ.copy()
+            run_env["DATABASE_URL"] = d["db_url"]
+            run_env["DJANGO_SETTINGS_MODULE"] = f"{pf}.settings"
+            run_env["PYTHONPATH"] = os.getcwd()
+
             # makemigrations — places app için migration dosyaları oluştur
             self._log("📋 Migration dosyaları oluşturuluyor (makemigrations)...")
             result = subprocess.run(
@@ -426,10 +432,6 @@ class SetupWizard(tk.Tk):
                 self._log("✅ Migration dosyaları hazır", SUCCESS)
 
             # migrate — venv python'unu kullan
-            run_env = os.environ.copy()
-            run_env["DATABASE_URL"] = d["db_url"]
-            run_env["DJANGO_SETTINGS_MODULE"] = f"{pf}.settings"
-            run_env["PYTHONPATH"] = os.getcwd()
             self._log("🐘 Neon veritabanı tabloları oluşturuluyor (migrate)...")
             result = subprocess.run(
                 [python_exe, "manage.py", "migrate"],
