@@ -412,6 +412,19 @@ class SetupWizard(tk.Tk):
             else:
                 self._log("✅ Kütüphaneler kuruldu", SUCCESS)
 
+            # makemigrations — places app için migration dosyaları oluştur
+            self._log("📋 Migration dosyaları oluşturuluyor (makemigrations)...")
+            result = subprocess.run(
+                [python_exe, "manage.py", "makemigrations"],
+                capture_output=True, text=True, env=run_env
+            )
+            if result.stdout:
+                self._log(result.stdout.strip())
+            if result.returncode != 0:
+                self._log(f"⚠️ makemigrations uyarısı:\n{result.stderr[:200]}", WARNING)
+            else:
+                self._log("✅ Migration dosyaları hazır", SUCCESS)
+
             # migrate — venv python'unu kullan
             run_env = os.environ.copy()
             run_env["DATABASE_URL"] = d["db_url"]
