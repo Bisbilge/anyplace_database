@@ -5,122 +5,293 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Yeni Mekan Ekle | {{ SITE_NAME }}</title>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --primary: #FF4757;
-            --secondary: #1E90FF;
-            --success: #2ED573;
-            --warning: #FFA502;
-            --dark: #2F3542;
-            --bg-light: #F1F2F6;
+            --sun:    #FFD93D;
+            --coral:  #FF6B6B;
+            --mint:   #6BCB77;
+            --sky:    #4D96FF;
+            --purple: #C77DFF;
+            --peach:  #FFB347;
+            --pink:   #FF85A1;
+            --dark:   #2d2d2d;
+            --cream:  #FFFBF0;
         }
 
-        body { 
-            margin: 0; padding: 20px; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            background-color: var(--bg-light); 
-            color: var(--dark); 
-            display: flex; justify-content: center; align-items: center; 
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--cream);
+            background-image: radial-gradient(circle at 15% 20%, rgba(255,217,61,0.18) 0%, transparent 40%),
+                              radial-gradient(circle at 85% 80%, rgba(107,203,119,0.15) 0%, transparent 40%),
+                              radial-gradient(circle at 80% 10%, rgba(199,125,255,0.12) 0%, transparent 35%);
             min-height: 100vh;
+            padding: 30px 16px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
+        /* ─── BACK LINK ─── */
+        .back-link {
+            align-self: flex-start;
+            max-width: 560px;
+            width: 100%;
+            margin: 0 auto 20px;
+            display: flex;
+        }
+        .back-link a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--dark);
+            background: white;
+            border: 2.5px solid var(--dark);
+            border-radius: 100px;
+            padding: 8px 16px;
+            box-shadow: 3px 3px 0 var(--dark);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .back-link a:hover {
+            transform: translateY(-2px);
+            box-shadow: 3px 5px 0 var(--dark);
+        }
+
+        /* ─── CARD ─── */
         .container {
-            background-color: white;
-            width: 100%; max-width: 550px;
-            border-radius: 16px;
-            border: 4px solid var(--dark);
-            box-shadow: 10px 10px 0px var(--dark);
+            width: 100%;
+            max-width: 560px;
+            background: white;
+            border: 3px solid var(--dark);
+            border-radius: 28px;
+            box-shadow: 7px 7px 0 var(--dark);
             overflow: hidden;
-            margin: 20px 0;
+            animation: slideUp 0.6s cubic-bezier(.34,1.4,.64,1) both;
         }
 
+        /* ─── HEADER ─── */
         .header {
-            background-color: var(--secondary);
+            background: var(--sky);
+            border-bottom: 3px solid var(--dark);
+            padding: 28px 28px 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '📍';
+            position: absolute;
+            font-size: 120px;
+            opacity: 0.07;
+            top: -20px; right: -20px;
+            transform: rotate(15deg);
+            line-height: 1;
+        }
+
+        .header h1 {
+            font-family: 'Nunito', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
             color: white;
-            padding: 25px;
-            border-bottom: 4px solid var(--dark);
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+            letter-spacing: 0.02em;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            margin-top: 6px;
+            position: relative;
+        }
+
+        /* ─── FORM ─── */
+        .form-content { padding: 28px; }
+
+        .form-group { margin-bottom: 22px; }
+
+        .form-group label {
+            display: block;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 13px;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        /* Django form widget'larını stilize et */
+        input[type="text"],
+        input[type="url"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 13px 16px;
+            border: 2.5px solid var(--dark);
+            border-radius: 14px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
+            background: var(--cream);
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+            appearance: none;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--sky);
+            box-shadow: 4px 4px 0 var(--sky);
+            background: white;
+        }
+
+        textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+        .help-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            margin-top: 7px;
+        }
+
+        /* ─── CATEGORY SECTION ─── */
+        .category-section {
+            background: #FFF9E6;
+            border: 2.5px solid var(--dark);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 4px 4px 0 var(--sun);
+            margin-bottom: 22px;
+        }
+
+        .category-section label {
+            display: block;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 13px;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+
+        .category-section select {
+            background: white;
+        }
+
+        /* ─── DIVIDER ─── */
+        .divider {
+            height: 2px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--dark) 0, var(--dark) 8px,
+                transparent 8px, transparent 16px
+            );
+            border-radius: 2px;
+            margin: 24px 0;
+            opacity: 0.12;
+        }
+
+        /* ─── CAPTCHA ─── */
+        .captcha-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .error-list {
+            list-style: none;
+            padding: 0;
             text-align: center;
         }
 
-        .header h1 { margin: 0; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-
-        .form-content { padding: 30px; }
-
-        .form-group { margin-bottom: 25px; }
-        .form-group label {
-            display: block; font-weight: 900; margin-bottom: 10px;
-            font-size: 15px; color: var(--dark); text-transform: uppercase;
-        }
-
-        /* Form Girdileri */
-        input[type="text"], input[type="url"], input[type="number"], textarea, select {
-            width: 100%; padding: 14px; 
-            border: 3px solid var(--dark); 
-            border-radius: 10px; 
-            font-size: 1rem; 
-            box-sizing: border-box; 
-            background: white;
-            font-weight: 600;
-            color: var(--dark);
-            cursor: pointer;
-        }
-
-        input:focus, textarea:focus, select:focus { 
-            outline: none; 
-            border-color: var(--primary);
-            box-shadow: 4px 4px 0px var(--primary);
-        }
-
-        .help-text { font-size: 0.85rem; color: #747D8C; margin-top: 8px; font-weight: 600; }
-
-        /* Kategori Seçimi İçin Özel Vurgu */
-        .category-section {
-            background: #FFFDF2;
-            padding: 20px;
-            border: 3px solid var(--dark);
+        .error-list li {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--coral);
+            background: #fff0f0;
+            border: 2px solid var(--coral);
             border-radius: 10px;
-            box-shadow: 4px 4px 0px var(--warning);
-            margin-bottom: 25px;
+            padding: 8px 14px;
+            margin-top: 6px;
         }
 
-        .captcha-container {
-            margin: 25px 0;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
+        /* ─── SUBMIT BTN ─── */
         .btn-submit {
-            width: 100%; background-color: var(--success); color: var(--dark);
-            padding: 18px; border-radius: 14px; border: 4px solid var(--dark);
-            font-size: 18px; font-weight: 900; text-transform: uppercase;
-            box-shadow: 6px 6px 0px var(--dark); cursor: pointer;
-            transition: all 0.15s ease-in-out;
+            width: 100%;
+            background: var(--mint);
+            color: var(--dark);
+            border: 3px solid var(--dark);
+            border-radius: 16px;
+            padding: 18px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 17px;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            box-shadow: 5px 5px 0 var(--dark);
+            cursor: pointer;
+            transition: transform 0.12s, box-shadow 0.12s;
         }
+
         .btn-submit:hover {
-            transform: translateY(4px) translateX(4px);
-            box-shadow: 0px 0px 0px var(--dark);
-            background-color: #26de71;
+            transform: translateY(-3px);
+            box-shadow: 5px 8px 0 var(--dark);
         }
 
-        .error-list { color: var(--primary); font-weight: 800; list-style: none; padding: 0; margin-top: 10px; text-align: center; }
+        .btn-submit:active {
+            transform: translateY(3px);
+            box-shadow: 2px 2px 0 var(--dark);
+        }
 
-        .back-link {
-            display: block; text-align: center; margin-top: 25px;
-            color: var(--secondary); font-weight: 900; text-decoration: none;
-            font-size: 15px; text-transform: uppercase;
+        /* ─── HONEYPOT ─── */
+        .honeypot { display: none; }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 20px 12px 50px; }
+            .form-content { padding: 20px; }
+            .header { padding: 22px 20px 18px; }
         }
     </style>
 </head>
 <body>
+
+    <div class="back-link">
+        <a href="/">← Haritaya Dön</a>
+    </div>
+
     <div class="container">
         <div class="header">
-            <h1>📍 {{ SITE_NAME|upper }} - YENİ MEKAN EKLE</h1>
+            <h1>📍 Yeni Mekan Ekle</h1>
+            <p>{{ SITE_NAME }} topluluğuna katkıda bulun!</p>
         </div>
-        
+
         <div class="form-content">
             <form method="post">
                 {% csrf_token %}
-                
-                <div style="display:none">
+
+                <div class="honeypot">
                     <input type="text" name="website_url" tabindex="-1" autocomplete="off">
                 </div>
 
@@ -131,22 +302,24 @@
                 </div>
 
                 <div class="category-section">
-                    <label>Kategori Seçimi</label>
+                    <label>🏷️ Kategori Seçimi</label>
                     {{ form.category }}
-                    <p class="help-text">Bu mekanın türünü listeden seçin.</p>
+                    <p class="help-text" style="margin-top:10px">Bu mekanın türünü listeden seçin.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Google Maps Linki</label>
+                    <label>📍 Google Maps Linki</label>
                     {{ form.maps_url }}
                     <p class="help-text">Konumu "Paylaş" diyerek aldığınız linki yapıştırın.</p>
                 </div>
 
                 <div class="form-group">
-                    <label>Ek Bilgiler / Açıklama</label>
+                    <label>📝 Açıklama</label>
                     {{ form.description }}
-                    <p class="help-text">Mekan hakkında bilinmesi gereken detaylar, nasıl gidilir vb.</p>
+                    <p class="help-text">Mekan hakkında bilinmesi gerekenler, nasıl gidilir vb.</p>
                 </div>
+
+                <div class="divider"></div>
 
                 <div class="captcha-container">
                     {{ form.captcha }}
@@ -159,11 +332,10 @@
                     {% endif %}
                 </div>
 
-                <button type="submit" class="btn-submit">BİLDİRİMİ GÖNDER</button>
+                <button type="submit" class="btn-submit">🌿 Mekanı Ekle</button>
             </form>
-
-            <a href="/" class="back-link">← Haritaya Geri Dön</a>
         </div>
     </div>
+
 </body>
 </html>

@@ -3,204 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>{{ SITE_NAME }} | Açık Kaynak Mekan Rehberi</title>
-    
+    <title>{{ SITE_NAME }} | Mekan Rehberi</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-    
+
     <style>
         :root {
-            /* Capcanlı, yüksek enerjili düz renkler */
-            --primary: #FF4757;    /* Canlı Kırmızı/Pembe */
-            --secondary: #1E90FF;  /* Parlak Mavi */
-            --success: #2ED573;    /* Fosforlu Yeşil */
-            --warning: #FFA502;    /* Enerjik Turuncu */
-            --dark: #2F3542;       /* Koyu Lacivert/Gri (Siyah yerine) */
-            --bg-light: #F1F2F6;
+            --sun:    #FFD93D;
+            --coral:  #FF6B6B;
+            --mint:   #6BCB77;
+            --sky:    #4D96FF;
+            --purple: #C77DFF;
+            --peach:  #FFB347;
+            --pink:   #FF85A1;
+            --dark:   #2d2d2d;
+            --cream:  #FFFBF0;
         }
 
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-light); color: var(--dark); }
-        #map { height: 100vh; width: 100%; z-index: 1; }
-        
-        .leaflet-popup-content-wrapper { 
-            border-radius: 16px; 
-            padding: 0; 
-            overflow: hidden; 
-            border: 3px solid var(--dark);
-            box-shadow: 6px 6px 0px rgba(47, 53, 66, 0.2);
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--cream);
+            overflow: hidden;
+            height: 100vh;
         }
-        .leaflet-popup-content { margin: 0 !important; width: 260px !important; }
-        .leaflet-popup-tip { border-top: 3px solid var(--dark); border-left: 3px solid var(--dark); }
 
-        .card { padding: 0; }
-        
-        .card-header { 
-            background-color: var(--warning); 
-            padding: 16px; 
-            border-bottom: 3px solid var(--dark);
-            display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
-        }
-        .card-title { margin: 0; font-size: 19px; font-weight: 900; color: var(--dark); line-height: 1.2; flex: 1; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        /* Kategori etiketi için jenerik badge tasarımı */
-        .badge-category { 
-            font-size: 12px; 
-            font-weight: 900; 
-            padding: 6px 10px; 
-            border-radius: 8px; 
-            border: 2px solid var(--dark); 
-            background: white; 
-            color: var(--dark);
-            white-space: nowrap; 
-            box-shadow: 2px 2px 0px var(--dark); 
+        #map { position: fixed; inset: 0; z-index: 1; }
+
+        /* ─── TOPBAR ─── */
+        #topbar {
+            position: fixed;
+            top: 16px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
             display: flex;
             align-items: center;
-            gap: 4px;
-        }
-
-        .card-body { padding: 16px; background-color: white; }
-        
-        .desc-text { font-size: 14px; color: var(--dark); line-height: 1.6; font-weight: 500; background: #FFFDF2; padding: 10px; border-left: 4px solid var(--warning); margin-bottom: 8px; }
-        .no-desc { font-size: 13px; color: #747D8C; font-style: italic; text-align: center; padding: 10px 0; }
-
-        .popup-report-btn {
-            display: block;
-            background-color: var(--dark);
-            color: white;
-            text-align: center;
-            padding: 14px;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-top: 3px solid var(--dark);
-            transition: background 0.2s ease;
-        }
-        .popup-report-btn:hover {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        #report-btn {
-            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; background-color: var(--primary); color: white;
-            padding: 16px 36px; border-radius: 14px; text-decoration: none;
-            font-size: 18px; font-weight: 900; letter-spacing: 1px;
+            gap: 14px;
+            background: var(--sun);
             border: 3px solid var(--dark);
-            box-shadow: 6px 6px 0px var(--dark); 
-            transition: all 0.15s ease-in-out;
-            display: flex; align-items: center; gap: 10px;
-            white-space: nowrap; text-transform: uppercase;
-        }
-        #report-btn:hover { 
-            transform: translateX(-50%) translateY(4px); 
-            box-shadow: 2px 2px 0px var(--dark); 
-            background-color: #ff3344;
+            border-radius: 100px;
+            padding: 10px 22px 10px 16px;
+            box-shadow: 4px 4px 0 var(--dark);
+            animation: bounceIn 0.7s cubic-bezier(.34,1.56,.64,1) both;
+            white-space: nowrap;
         }
 
-        .custom-cluster { background-color: rgba(46, 213, 115, 0.3); border-radius: 50%; border: 2px dashed var(--dark); }
-        .custom-cluster div { 
-            background-color: var(--success); color: var(--dark); 
-            width: 36px; height: 36px; margin-left: 2px; margin-top: 2px; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-size: 16px; border: 2px solid var(--dark);
+        .logo-emoji {
+            font-size: 22px;
+            display: block;
+            animation: wiggle 3s ease-in-out infinite;
+        }
+
+        .site-name {
+            font-family: 'Nunito', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--dark);
+        }
+
+        .topbar-dot {
+            width: 5px; height: 5px;
+            background: var(--dark);
+            border-radius: 50%;
+            opacity: 0.4;
+        }
+
+        #place-count {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        #count-num { color: var(--coral); }
+
+        /* ─── ADD BUTTON ─── */
+        #add-btn {
+            position: fixed;
+            bottom: 28px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--coral);
+            color: white;
+            text-decoration: none;
+            font-family: 'Nunito', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            padding: 16px 36px;
+            border-radius: 100px;
+            border: 3px solid var(--dark);
+            box-shadow: 5px 5px 0 var(--dark);
+            transition: transform 0.15s, box-shadow 0.15s;
+            animation: bounceIn 0.7s 0.15s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        #add-btn:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 5px 8px 0 var(--dark);
+        }
+        #add-btn:active {
+            transform: translateX(-50%) translateY(2px);
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        /* ─── ZOOM ─── */
+        .leaflet-control-zoom {
+            border: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+        .leaflet-control-zoom a {
+            background: white !important;
+            border: 3px solid var(--dark) !important;
+            border-radius: 14px !important;
+            color: var(--dark) !important;
+            font-size: 18px !important;
+            font-weight: 900 !important;
+            width: 40px !important;
+            height: 40px !important;
+            line-height: 34px !important;
+            box-shadow: 3px 3px 0 var(--dark) !important;
+            transition: transform 0.1s, background 0.1s !important;
+        }
+        .leaflet-control-zoom a:hover {
+            background: var(--sun) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(255,255,255,0.85) !important;
+            border-radius: 10px !important;
+            font-size: 10px !important;
+            padding: 3px 8px !important;
+            border: none !important;
+        }
+
+        /* ─── POPUP ─── */
+        .leaflet-popup-content-wrapper {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+        .leaflet-popup-content { margin: 0 !important; width: 272px !important; }
+        .leaflet-popup-tip-container { display: none; }
+        .leaflet-popup-close-button {
+            top: 8px !important; right: 10px !important;
+            font-size: 20px !important;
+            color: var(--dark) !important;
+            font-weight: 900 !important;
+            z-index: 10;
+        }
+
+        .popup-card {
+            background: white;
+            border: 3px solid var(--dark);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 6px 6px 0 var(--dark);
+            animation: popBounce 0.35s cubic-bezier(.34,1.56,.64,1) both;
+        }
+
+        .popup-header {
+            padding: 16px 16px 12px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            border-bottom: 2px solid var(--dark);
+        }
+
+        .popup-title {
+            font-family: 'Nunito', sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--dark);
+            line-height: 1.25;
+            flex: 1;
+            padding-right: 24px;
+        }
+
+        .popup-badge {
+            flex-shrink: 0;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 100px;
+            background: white;
+            color: var(--dark);
+            border: 2px solid var(--dark);
+            white-space: nowrap;
+            box-shadow: 2px 2px 0 var(--dark);
+        }
+
+        .popup-body { padding: 14px 16px; }
+
+        .popup-desc {
+            font-size: 13px;
+            line-height: 1.65;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .popup-no-desc {
+            font-size: 12px;
+            color: #bbb;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .popup-report {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px;
+            border-top: 2px solid #eee;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            color: #aaa;
+            transition: all 0.15s;
+            background: #fafafa;
+        }
+        .popup-report:hover { background: #fff0f0; color: var(--coral); }
+
+        /* ─── CLUSTER ─── */
+        .custom-cluster { background: transparent; border: none; }
+        .custom-cluster div {
+            background: var(--purple);
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 3px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 14px;
+            box-shadow: 3px 3px 0 var(--dark);
+        }
+
+        /* ─── USER DOT ─── */
+        .user-dot {
+            width: 18px; height: 18px;
+            background: var(--sky);
+            border-radius: 50%;
+            border: 3px solid var(--dark);
+            box-shadow: 3px 3px 0 var(--dark);
+            animation: boing 1s ease-in-out infinite alternate;
+        }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes bounceIn {
+            from { opacity: 0; transform: translateX(-50%) scale(0.6); }
+            to   { opacity: 1; transform: translateX(-50%) scale(1); }
+        }
+        @keyframes popBounce {
+            from { opacity: 0; transform: scale(0.75) translateY(12px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes wiggle {
+            0%,100% { transform: rotate(-10deg); }
+            50%      { transform: rotate(10deg); }
+        }
+        @keyframes boing {
+            from { transform: translateY(0) scale(1); }
+            to   { transform: translateY(-5px) scale(1.1); }
         }
 
         @media (max-width: 600px) {
-            #report-btn { width: 80%; bottom: 25px; padding: 14px 20px; font-size: 16px; }
-            .leaflet-popup-content { width: 250px !important; }
+            #add-btn { width: calc(100% - 32px); justify-content: center; }
+            .leaflet-popup-content { width: 252px !important; }
         }
     </style>
 </head>
 <body>
 
+<div id="topbar">
+    <span class="logo-emoji">🗺️</span>
+    <span class="site-name">{{ SITE_NAME }}</span>
+    <div class="topbar-dot"></div>
+    <span id="place-count"><span id="count-num">…</span> mekan</span>
+</div>
+
 <div id="map"></div>
 
-<a id="report-btn" href="/add-place/">
-    <span style="font-size: 22px;">📍</span> Yeni Mekan Ekle
-</a>
+<a id="add-btn" href="/add-place/">📍 Yeni Mekan Ekle</a>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-
 <script>
-    function escapeHTML(str) {
-        if (!str) return "";
-        return String(str).replace(/[&<>"']/g, function(m) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    const COLORS = ['#FFD93D','#FF6B6B','#6BCB77','#4D96FF','#C77DFF','#FFB347','#FF85A1','#6ECFFF'];
+    let ci = 0;
+    const nextColor = () => COLORS[ci++ % COLORS.length];
+
+    function esc(s) {
+        if (!s) return "";
+        return String(s).replace(/[&<>"']/g, m =>
+            ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+    }
+
+    const map = L.map('map', { zoomControl: false }).setView([41.0082, 28.9784], 13);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    function makeIcon(icon, color) {
+        return L.divIcon({
+            html: `<div style="
+                width:42px;height:42px;
+                background:${color};
+                border:3px solid #2d2d2d;
+                border-radius:50% 50% 50% 4px;
+                display:flex;align-items:center;justify-content:center;
+                font-size:20px;
+                box-shadow:3px 3px 0 #2d2d2d;
+                transform:rotate(-45deg);
+            "><span style="transform:rotate(45deg);display:block">${icon}</span></div>`,
+            className:'',
+            iconSize:[42,42],
+            iconAnchor:[21,42],
+            popupAnchor:[0,-46]
         });
     }
 
-    var map = L.map('map', { zoomControl: false }).setView([41.0082, 28.9784], 13);
-    L.control.zoom({ position: 'topright' }).addTo(map);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    var markers = L.markerClusterGroup({
-        maxClusterRadius: 45,
+    const markers = L.markerClusterGroup({
+        maxClusterRadius: 50,
         disableClusteringAtZoom: 17,
-        spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
-        iconCreateFunction: function(cluster) {
-            return L.divIcon({ 
-                html: '<div><span>' + cluster.getChildCount() + '</span></div>', 
-                className: 'custom-cluster', 
-                iconSize: L.point(44, 44) 
-            });
-        }
+        iconCreateFunction: c => L.divIcon({
+            html:`<div><span>${c.getChildCount()}</span></div>`,
+            className:'custom-cluster',
+            iconSize: L.point(46,46)
+        })
     });
 
-    // API rotası güncellendi
     fetch('/api/places/')
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
+            document.getElementById('count-num').textContent = data.length;
             data.forEach(place => {
-                const safeName = escapeHTML(place.name);
-                const safeDesc = escapeHTML(place.desc || '');
-                const safeCategoryName = escapeHTML(place.category_name);
-                const safeCategoryIcon = place.category_icon ? escapeHTML(place.category_icon) : '📌';
+                const color   = nextColor();
+                const name    = esc(place.name);
+                const desc    = esc(place.desc || '');
+                const catName = esc(place.category_name);
+                const catIcon = place.category_icon ? esc(place.category_icon) : '📌';
 
-                // Kategori etiketi oluşturuldu
-                const categoryBadge = `<span class="badge-category">${safeCategoryIcon} ${safeCategoryName}</span>`;
-
-                const popupContent = `
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">${safeName}</h3>
-                            ${categoryBadge}
+                const popup = `
+                    <div class="popup-card">
+                        <div class="popup-header" style="background:${color}">
+                            <div class="popup-title">${name}</div>
+                            <div class="popup-badge">${catIcon} ${catName}</div>
                         </div>
-                        <div class="card-body">
-                            ${safeDesc ? `<div class="desc-text">${safeDesc}</div>` : '<div class="no-desc">Açıklama bulunmuyor.</div>'}
+                        <div class="popup-body">
+                            ${desc
+                                ? `<div class="popup-desc">${desc}</div>`
+                                : `<div class="popup-no-desc">Henüz açıklama yok 🌿</div>`}
                         </div>
-                        <a href="/report-issue/?id=${place.id}" class="popup-report-btn">⚠️ Hata Bildir</a>
-                    </div>
-                `;
+                        <a href="/report-issue/?id=${place.id}" class="popup-report">⚠️ Hata bildir</a>
+                    </div>`;
 
-                var marker = L.marker([place.lat, place.lng]).bindPopup(popupContent, {
-                    autoPanPadding: [50, 50]
-                });
-                markers.addLayer(marker);
+                markers.addLayer(
+                    L.marker([place.lat, place.lng], { icon: makeIcon(catIcon, color) })
+                     .bindPopup(popup, { maxWidth: 300 })
+                );
             });
             map.addLayer(markers);
         })
-        .catch(err => console.error("Veri hatası:", err));
+        .catch(err => console.error('Veri hatası:', err));
 
-    map.locate({setView: true, maxZoom: 15});
-    map.on('locationfound', function(e) {
-        L.circle(e.latlng, e.accuracy / 2, {
-            color: '#FF4757', fillColor: '#FF4757', fillOpacity: 0.2, weight: 2
+    map.locate({ setView: true, maxZoom: 15 });
+    map.on('locationfound', e => {
+        L.circle(e.latlng, {
+            radius: e.accuracy / 2,
+            color: '#4D96FF', fillColor: '#4D96FF',
+            fillOpacity: 0.1, weight: 2, dashArray: '6,6'
         }).addTo(map);
-        
-        L.circleMarker(e.latlng, {
-            radius: 10, color: '#2F3542', fillColor: '#1E90FF', fillOpacity: 1, weight: 3
-        }).addTo(map).bindPopup("<div style='padding:8px; font-weight:900; font-size: 15px;'>📍 BURADASIN!</div>");
+
+        L.marker(e.latlng, {
+            icon: L.divIcon({
+                html:'<div class="user-dot"></div>',
+                className:'',
+                iconSize:[18,18], iconAnchor:[9,9]
+            })
+        }).addTo(map).bindPopup(`
+            <div class="popup-card">
+                <div class="popup-header" style="background:#6ECFFF">
+                    <div class="popup-title">📍 Buradasın!</div>
+                </div>
+            </div>`);
     });
 </script>
-
 </body>
 </html>
